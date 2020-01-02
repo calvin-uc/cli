@@ -1,0 +1,4 @@
+{
+  "node": ".node/bin/node",
+  "pnpm": ".pnpm/lib/bin/pnpm.js"
+}

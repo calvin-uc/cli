@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "lib": ["es2015", "es2017", "es2018"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2018",
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "pretty": false,
+    "strict": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+  },
+  "include": [
+    "src/*.ts",
+    "src/**/*.ts"
+  ],
+  "compileOnSave": false
+}

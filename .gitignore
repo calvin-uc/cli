@@ -1,0 +1,4 @@
+.node/
+.pnpm/
+dist/
+node_modules/

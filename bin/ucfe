@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+root=$HOME/.ucfe
+
+install=$root/install
+
+node_path=$root/.node
+node_bin=$node_path/bin/node
+
+pnpm_path=$root/.pnpm
+pnpm_js=$pnpm_path/lib/bin/pnpm.js
+
+node_modules_path=$root/node_modules
+dist_path=$root/dist
+
+# Ensure we have node
+if [ ! -d $node_path ]
+then
+  $install/node.sh $node_path 12.14.0
+fi
+
+# Ensure we have pnpm
+if [ ! -d $pnpm_path ]
+then
+  $install/pnpm.sh $pnpm_path 3.8.1 $node_bin
+fi
+
+# Ensure node_modules have been installed
+if [ ! -d $node_modules_path ]
+then
+  pushd $root > dev/null
+  ${node_bin} ${pnpm_js} install
+  popd
+fi
+
+# Ensure dist has been built
+if [ ! -d $dist_path ]
+then
+  pushd $root > dev/null
+  ${node_bin} ${pnpm_js} run build
+  popd
+fi
+
+${node_bin} $root/dist/bin/ucfe.js "$@"

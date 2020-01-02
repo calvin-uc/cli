@@ -1,0 +1,21 @@
+{
+  "name": "ucfe-cli",
+  "version": "0.0.0",
+  "description": "Compass command line tool for uc-frontend",
+  "main": "dist/ucfe.js",
+  "scripts": {
+    "build": "rm -rf dist/ && tsc"
+  },
+  "author": "Calvin Lee <calvin.lee@compass.com>",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "3.0.0",
+    "commander": "4.0.1",
+    "enquirer": "^2.3.2",
+    "execa": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "13.1.2",
+    "typescript": "3.7.4"
+  }
+}
