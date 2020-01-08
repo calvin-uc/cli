@@ -23,6 +23,7 @@ export async function execute(category: string, name: string, opts: Options) {
 
   const subprocess = execa('./pnpm', ['install'], options);
 
+  let cmd = 'Error resolving command';
   try {
     if (opts.clean) {
       await removePnpmStore();
@@ -36,12 +37,16 @@ export async function execute(category: string, name: string, opts: Options) {
 
     const sp = await subprocess;
 
-    console.log('\nSuccessfully executed:');
-    console.log(`CMD: ${sp.command}`);
-    console.log(`DIR: ${cwd}`);
+    console.log('\nSuccessfully installed packages:');
+    cmd = sp.command;
   } catch (e) {
-    console.error(e);
+    console.log('\nFailed installing packages:');
+    // TODO: log error to file
+    cmd = e.command;
   }
+
+  console.log(`CMD: ${cmd}`);
+  console.log(`DIR: ${cwd}`);
 }
 
 async function promptCategory(): Promise<string> {
