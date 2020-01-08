@@ -28,17 +28,13 @@ fi
 # Ensure node_modules have been installed
 if [ ! -d $node_modules_path ]
 then
-  pushd $root > dev/null
-  ${node_bin} ${pnpm_js} install
-  popd
+  cd $root && ${node_bin} ${pnpm_js} install
 fi
 
 # Ensure dist has been built
 if [ ! -d $dist_path ]
 then
-  pushd $root > dev/null
-  ${node_bin} ${pnpm_js} run build
-  popd
+  cd $root && ${node_bin} ${pnpm_js} run build
 fi
 
 ${node_bin} $root/dist/bin/ucfe.js "$@"
