@@ -130,13 +130,17 @@ async function removeLockFile(options: execa.Options): Promise<void> {
   const lockFiles = ['shrinkwrap.yaml', 'pnpm-lock.yaml'];
 
   for (const file of lockFiles) {
+    let cmd = 'Error resolving command';
     try {
       const sp = await execa('rm', [file], options);
       console.log(`\nSuccessfully removed ${file}`);
-      console.log(`CMD: ${sp.command}`);
-      console.log(`DIR: ${options.cwd}\n`);
+      cmd = sp.command;
     } catch (e) {
-      // no-op
+      // TODO: log error to file
+      cmd = e.command;
     }
+
+    console.log(`CMD: ${cmd}`);
+    console.log(`DIR: ${options.cwd}\n`);
   }
 }
