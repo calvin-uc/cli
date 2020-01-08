@@ -92,21 +92,37 @@ async function promptName(path: string): Promise<string> {
 
 async function removePnpmStore(): Promise<void> {
   const cwd = path.resolve();
-  const sp = await execa('rm', ['-rf', './.pnpm-store'], {
-    cwd,
-    stdio: 'inherit',
-  });
+  let cmd = 'Error resolving command';
+  try {
+    const sp = await execa('rm', ['-rf', '.pnpm-store/'], {
+      cwd,
+      stdio: 'inherit',
+    });
+    console.log('\nSuccessfully removed pnpm store');
+    cmd = sp.command;
+  } catch (e) {
+    console.log('\nFailed removing pnpm store');
+    // TODO: log error to file
+    cmd = e.command;
+  }
 
-  console.log('\nSuccessfully removed pnpm store');
-  console.log(`CMD: ${sp.command}`);
+  console.log(`CMD: ${cmd}`);
   console.log(`DIR: ${cwd}\n`);
 }
 
 async function removeNodeModules(options: execa.Options): Promise<void> {
-  const sp = await execa('rm', ['-rf', 'node_modules'], options);
+  let cmd = 'Error resolving command';
+  try {
+    const sp = await execa('rm', ['-rf', 'node_modules/'], options);
+    console.log('\nSuccessfully removed node modules');
+    cmd = sp.command;
+  } catch (e) {
+    console.log('\nFailed removing node modules');
+    // TODO: log error to file
+    cmd = e.command;
+  }
 
-  console.log('\nSuccessfully removed node modules');
-  console.log(`CMD: ${sp.command}`);
+  console.log(`CMD: ${cmd}`);
   console.log(`DIR: ${options.cwd}\n`);
 }
 
