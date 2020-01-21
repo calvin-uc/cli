@@ -1,4 +1,4 @@
 {
-  "node": ".node/bin/node",
-  "pnpm": ".pnpm/lib/bin/pnpm.js"
+  "home": "/Users/calvin.lee/",
+  "root": "/Users/calvin.lee/development/"
 }

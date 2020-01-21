@@ -1,24 +1,41 @@
-import {readdirSync} from 'fs';
+import {existsSync, readdirSync} from 'fs';
 import path from 'path';
 import execa from 'execa';
 import {prompt} from 'enquirer';
+import config from '../config/bin.json';
 
-type Options = {
-  regen: boolean,
-  clean: boolean,
+const HOME_PATH = config.home;
+const ROOT_PATH = config.root;
+
+const CATEGORY_LIST = [
+  'apps',
+  'lambdas',
+  'packages',
+];
+
+export type Options = {
+  regen?: boolean,
+  clean?: boolean,
+  cwd?: string,
 };
 
 export async function execute(category: string, name: string, opts: Options) {
+  if (opts.cwd && !category && !name) {
+    [category, name] = parseArgsFromCwd(opts.cwd);
+  }
+
+  [category, name] = validatePath(category, name);
+
   if (!category) {
     category = await promptCategory();
   }
 
   if (!name) {
-    const pathToCategory = path.resolve('development', 'uc-frontend', category);
+    const pathToCategory = path.join(ROOT_PATH, 'uc-frontend', category);
     name = await promptName(pathToCategory);
   }
 
-  const cwd = path.resolve('development', 'uc-frontend', category, name);
+  const cwd = path.join(ROOT_PATH, 'uc-frontend', category, name);
   const options:execa.Options = {cwd, stdio: 'inherit'};
 
   const subprocess = execa('./pnpm', ['install'], options);
@@ -49,17 +66,54 @@ export async function execute(category: string, name: string, opts: Options) {
   console.log(`DIR: ${cwd}`);
 }
 
+function validatePath(category: string, name: string): [string, string] {
+  if (category && !CATEGORY_LIST.includes(category)) {
+    console.log(`Invalid category: ${category}`);
+    category = '';
+    name = '';
+  }
+
+  if (category && name) {
+    const pathToCategory = path.join(ROOT_PATH, 'uc-frontend', category);
+    const dirs = getDirectoryList(pathToCategory);
+    if (!dirs.includes(name)) {
+      console.log(`Invalid name: ${name}`)
+      name = '';
+    }
+  }
+
+  return [category, name]
+}
+
+function getDirectoryList(path: string): string[] {
+  let dirs = [];
+  try {
+    dirs = readdirSync(path, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name)
+  } catch (e) {
+    console.error(e);
+    // this shouldn't be an issue
+    return [];
+  }
+
+  return dirs;
+}
+
+function parseArgsFromCwd(path: string): [string, string] {
+  const PATH_MATCHER = /^.*uc-frontend\/([-\w]+)\/([-\w.]+)\/?(.+)?/
+  const [_fullPath, category, name] = PATH_MATCHER.exec(path) || ['', '', ''];
+
+  return [category, name];
+}
+
 async function promptCategory(): Promise<string> {
   try {
     const {category} = await prompt({
       type: 'autocomplete',
       name: 'category',
       message: 'Select a category',
-      choices: [
-        'apps',
-        'lambdas',
-        'packages',
-      ],
+      choices: CATEGORY_LIST,
     });
 
     return category;
@@ -70,15 +124,7 @@ async function promptCategory(): Promise<string> {
 }
 
 async function promptName(path: string): Promise<string> {
-  let dirs = [];
-  try {
-    dirs = readdirSync(path, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name)
-  } catch (e) {
-    // this shouldn't be an issue
-    return '';
-  }
+  let dirs = getDirectoryList(path);
 
   try {
     const {name} = await prompt({
@@ -96,10 +142,19 @@ async function promptName(path: string): Promise<string> {
 }
 
 async function removePnpmStore(): Promise<void> {
-  const cwd = path.resolve();
+  const PNPM_STORE_FOLDER = '.pnpm-store';
+  const cwd = path.join(HOME_PATH);
+
+  console.log('cwd', cwd)
+  console.log(path.join(HOME_PATH, PNPM_STORE_FOLDER))
+  if (!pathExists(path.join(HOME_PATH, PNPM_STORE_FOLDER))) {
+    console.log('does not exist?!?!');
+    return;
+  }
+
   let cmd = 'Error resolving command';
   try {
-    const sp = await execa('rm', ['-rf', '.pnpm-store/'], {
+    const sp = await execa('rm', ['-rf', PNPM_STORE_FOLDER], {
       cwd,
       stdio: 'inherit',
     });
@@ -116,9 +171,15 @@ async function removePnpmStore(): Promise<void> {
 }
 
 async function removeNodeModules(options: execa.Options): Promise<void> {
+  const NODE_MODULES_FOLDER = 'node_modules/';
+
+  if (!pathExists(path.join(options.cwd || '', NODE_MODULES_FOLDER))) {
+    return;
+  }
+
   let cmd = 'Error resolving command';
   try {
-    const sp = await execa('rm', ['-rf', 'node_modules/'], options);
+    const sp = await execa('rm', ['-rf', NODE_MODULES_FOLDER], options);
     console.log('\nSuccessfully removed node modules');
     cmd = sp.command;
   } catch (e) {
@@ -148,4 +209,11 @@ async function removeLockFile(options: execa.Options): Promise<void> {
     console.log(`CMD: ${cmd}`);
     console.log(`DIR: ${options.cwd}\n`);
   }
+}
+
+function pathExists(path: string): boolean {
+  const exists = existsSync(path);
+  !exists && console.log(`\n${path} does not exist`);
+
+  return exists;
 }
